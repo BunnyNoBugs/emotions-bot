@@ -71,7 +71,7 @@ if __name__ == '__main__':
                     vk.messages.send(
                         user_id=user_id,
                         random_id=random.getrandbits(50),
-                        message='Ладно, прощаю'
+                        message='Хорошо, давайте начнем все сначала'
                     )
                     send_state(user_id, user_states)
                 elif message_text == '/state':
