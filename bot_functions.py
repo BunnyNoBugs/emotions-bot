@@ -49,6 +49,7 @@ def estimate_sentiment(text, model):
 def generate_reply(estimation, phrases, n_closest=200):
     phrases = sorted(phrases, key=lambda x: np.abs(x[1] - estimation))[:n_closest]
     output = random.choice(phrases)
-    output = '\n'.join([output[0], str(round(output[1], 2))])
+    # output = '\n'.join([output[0], str(round(output[1], 2))])
+    output = output[0]
 
     return output
