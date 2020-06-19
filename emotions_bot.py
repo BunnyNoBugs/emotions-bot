@@ -51,8 +51,10 @@ def new_message_timeout_error(user_id):
     )
 
 
-def new_message_error(user_id):
+def new_message_error(user_id, error):
     print(event)
+    print("Error:")
+    print(str(error))
     vk.messages.send(
         user_id=user_id, random_id=random.getrandbits(50),
         message='Что-то совсем сломалось, давайте еще раз'
@@ -65,39 +67,42 @@ if __name__ == '__main__':
     while True:
         print("Getting another event portion: " + str(load_counter))
 
-        for event in long_poll.check():
-            if event.type == VkBotEventType.MESSAGE_NEW:
-                user_id = event.object.message['from_id']
-                try:
-                    message_text = event.object.message['text']
-                    if message_text == '/help':
-                        send_help(user_id)
-                    elif message_text == '/sorry':
-                        user_states[user_id] = restore_state()
-                        vk.messages.send(
-                            user_id=user_id,
-                            random_id=random.getrandbits(50),
-                            message='Хорошо, давайте начнем все сначала'
-                        )
-                        send_state(user_id, user_states)
-                    elif message_text == '/state':
-                        if user_id not in user_states:
+        try:
+            for event in long_poll.check():
+                if event.type == VkBotEventType.MESSAGE_NEW:
+                    user_id = event.object.message['from_id']
+                    try:
+                        message_text = event.object.message['text']
+                        if message_text == '/help':
+                            send_help(user_id)
+                        elif message_text == '/sorry':
                             user_states[user_id] = restore_state()
-                        send_state(user_id, user_states)
-                    else:
-                        estimation = estimate_sentiment(message_text, sentiment_model)
-                        user_states[user_id] = update_state(estimation, user_id, user_states)
-                        reply = generate_reply(estimation, generated_phrases)
-                        vk.messages.send(
-                            user_id=user_id,
-                            random_id=random.getrandbits(50),
-                            message=reply
-                        )
-                        send_state(user_id, user_states)
-                except TimeoutError:
-                    new_message_timeout_error(user_id)
-                except:
-                    new_message_error(user_id)
+                            vk.messages.send(
+                                user_id=user_id,
+                                random_id=random.getrandbits(50),
+                                message='Хорошо, давайте начнем все сначала'
+                            )
+                            send_state(user_id, user_states)
+                        elif message_text == '/state':
+                            if user_id not in user_states:
+                                user_states[user_id] = restore_state()
+                            send_state(user_id, user_states)
+                        else:
+                            estimation = estimate_sentiment(message_text, sentiment_model)
+                            user_states[user_id] = update_state(estimation, user_id, user_states)
+                            reply = generate_reply(estimation, generated_phrases)
+                            vk.messages.send(
+                                user_id=user_id,
+                                random_id=random.getrandbits(50),
+                                message=reply
+                            )
+                            send_state(user_id, user_states)
+                    except TimeoutError:
+                        new_message_timeout_error(user_id)
+                    except Exception as e:
+                        new_message_error(user_id, e)
+        except Exception as e:
+            print("Something went wrong: " + str(e))
 
         load_counter += 1
         time.sleep(1000)
