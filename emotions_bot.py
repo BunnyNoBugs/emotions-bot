@@ -62,11 +62,7 @@ def new_message_error(user_id, error):
 
 
 if __name__ == '__main__':
-    load_counter = 0
-
     while True:
-        print("Getting another event portion: " + str(load_counter))
-
         try:
             for event in long_poll.check():
                 if event.type == VkBotEventType.MESSAGE_NEW:
@@ -102,7 +98,9 @@ if __name__ == '__main__':
                     except Exception as e:
                         new_message_error(user_id, e)
         except Exception as e:
-            print("Something went wrong: " + str(e))
-
-        load_counter += 1
-        time.sleep(1000)
+            print(f'Something went wrong: {str(e)}')
+            vk.messages.send(
+                user_id=75176725,
+                random_id=random.getrandbits(50),
+                message='Я сдох'
+            )
