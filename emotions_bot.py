@@ -7,6 +7,9 @@ from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 from conf import TOKEN, GROUP_ID
 from bot_functions import *
 
+from datetime import datetime
+
+
 vk_session = VkApi(token=TOKEN)
 long_poll = VkBotLongPoll(vk_session, GROUP_ID)
 vk = vk_session.get_api()
@@ -44,6 +47,13 @@ def send_state(user_id, user_states):
     )
 
 
+def log_error(error):
+    log_line = f'[{str(datetime.now())}] {str(error)}'
+    print(log_line)
+    with open('error.log', 'a', encoding='utf-8') as f:
+        f.write(log_line + '\n')
+
+
 def new_message_timeout_error(user_id):
     vk.messages.send(
         user_id=user_id, random_id=random.getrandbits(50),
@@ -51,10 +61,7 @@ def new_message_timeout_error(user_id):
     )
 
 
-def new_message_error(user_id, error):
-    print(event)
-    print("Error:")
-    print(str(error))
+def new_message_error(user_id):
     vk.messages.send(
         user_id=user_id, random_id=random.getrandbits(50),
         message='Что-то совсем сломалось, давайте еще раз'
@@ -93,14 +100,11 @@ if __name__ == '__main__':
                                 message=reply
                             )
                             send_state(user_id, user_states)
-                    except TimeoutError:
+                    except TimeoutError as e:
                         new_message_timeout_error(user_id)
+                        log_error(e)
                     except Exception as e:
-                        new_message_error(user_id, e)
+                        new_message_error(user_id)
+                        log_error(e)
         except Exception as e:
-            print(f'Something went wrong: {str(e)}')
-            vk.messages.send(
-                user_id=75176725,
-                random_id=random.getrandbits(50),
-                message='Я сдох'
-            )
+            log_error(e)
